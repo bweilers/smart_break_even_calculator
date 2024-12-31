@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="step-container">
+    <h2>Step 2: Target Market</h2>
+    <p class="lead">Define your target audience and location</p>
+    
+    <form method="POST" action="{{ url_for('step2') }}">
+        <div class="mb-3">
+            <label for="target_audience" class="form-label">Who is your target customer?</label>
+            <input type="text" class="form-control" id="target_audience" name="target_audience" 
+                   placeholder="E.g., Young professionals aged 25-35">
+            <div class="form-text">Consider demographics, interests, and needs.</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="location" class="form-label">Where will you sell?</label>
+            <input type="text" class="form-control" id="location" name="location" 
+                   placeholder="E.g., Downtown Seattle, Online nationwide">
+            <div class="form-text">Specify geographic location or online presence.</div>
+        </div>
+        
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('step1') }}" class="btn btn-secondary">← Back</a>
+            <button type="submit" class="btn btn-primary">Next →</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

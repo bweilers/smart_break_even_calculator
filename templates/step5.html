@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="step-container">
+    <h2>Step 5: Fixed Costs</h2>
+    <p class="lead">What are your monthly overhead costs?</p>
+    
+    {% if ai_suggestion %}
+    <div class="alert alert-info">
+        <h4>AI Suggestion:</h4>
+        <p>{{ ai_suggestion }}</p>
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="{{ url_for('step5') }}">
+        <div class="mb-3">
+            <label for="overhead_costs" class="form-label">Monthly Fixed Costs ($)</label>
+            <input type="number" step="0.01" class="form-control" id="overhead_costs" name="overhead_costs" 
+                   placeholder="Enter monthly fixed costs">
+            <div class="form-text">Include rent, utilities, salaries, etc. Leave blank for AI suggestion.</div>
+        </div>
+        
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('step4') }}" class="btn btn-secondary">← Back</a>
+            <button type="submit" class="btn btn-primary">Calculate Break-Even →</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

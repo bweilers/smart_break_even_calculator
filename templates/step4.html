@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="step-container">
+    <h2>Step 4: Cost of Goods</h2>
+    <p class="lead">What does it cost to produce one unit?</p>
+    
+    {% if ai_suggestion %}
+    <div class="alert alert-info">
+        <h4>AI Suggestion:</h4>
+        <p>{{ ai_suggestion }}</p>
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="{{ url_for('step4') }}">
+        <div class="mb-3">
+            <label for="cost_of_goods" class="form-label">Cost per unit ($)</label>
+            <input type="number" step="0.01" class="form-control" id="cost_of_goods" name="cost_of_goods" 
+                   placeholder="Enter cost per unit">
+            <div class="form-text">Include materials, labor, and direct production costs. Leave blank for AI suggestion.</div>
+        </div>
+        
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('step3') }}" class="btn btn-secondary">← Back</a>
+            <button type="submit" class="btn btn-primary">Next →</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
