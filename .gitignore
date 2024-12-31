@@ -1,2 +1,28 @@
-.env
-.env.example
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Virtual Environments
+venv/
+env/
+
+# Flask
+instance/
+*.env
+
+# Logs
+*.log
+*.out
+*.err
+
+# Cache files
+*.cache
+.cache/
+
+# VS Code/Windsurf
+.vscode/
+
+# MacOS
+.DS_Store
