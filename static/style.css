@@ -40,6 +40,7 @@ h2 {
     color: #1976d2;
     margin: 1rem 0;
     padding: 1rem;
+    position: relative;
 }
 
 .chart-container {
@@ -71,4 +72,22 @@ h2 {
 .debug-info h5 {
     color: #6c757d;
     margin-bottom: 0.5rem;
+}
+
+.suggestion-used {
+    animation: highlight 1s ease-out;
+}
+
+@keyframes highlight {
+    0% {
+        background-color: #d4edda;
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+.use-suggestion-btn {
+    float: right;
+    margin-top: -5px;
 }

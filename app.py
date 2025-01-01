@@ -21,6 +21,7 @@ def init_session():
             'price_range': 0,
             'cost_of_goods': 0,
             'overhead_costs': 0,
+            'startup_costs': 0,
             'marketing_budget': 0,
             'sales_volume': 0,
             'time_horizon': 0,
@@ -33,10 +34,13 @@ def get_ai_suggestion(prompt):
     try:
         print(f"Debug - Sending prompt to OpenAI: {prompt}")  # Debug print
         response = client.chat.completions.create(
-            # model="gpt-3.5-turbo",
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a business analyst helping entrepreneurs estimate costs and metrics for their business."},
+                {"role": "system", "content": """You are a business analyst helping entrepreneurs estimate costs and metrics for their business.
+                Always structure your response as follows:
+                1. Detailed explanation and analysis
+                2. Breakdown of components (if applicable)
+                3. End with 'FINAL SUGGESTION: $X,XXX.XX' on a new line, where X,XXX.XX is your final suggested amount"""},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -99,11 +103,18 @@ def step3():
     if request.method == 'POST':
         price = request.form.get('price_range')
         if not price:
-            print(f"Debug - this is the product description: {session['data']['product_description']}")
-            print(f"Debug - this is the target customer: {session['data']['target_audience']}")
-            print(f"Debug - this is the location: {session['data']['location']}")
+            prompt = f"""Based on the following business details, what would be a good price point?
+            - Product/Service: {session['data']['product_description']}
+            - Target Market: {session['data']['target_audience']} in {session['data']['location']}
             
-            prompt = f"Based on a product description of '{session['data']['product_description']}' targeting '{session['data']['target_audience']}' in '{session['data']['location']}', what would be a reasonable price range?"
+            Consider:
+            - Target market's purchasing power
+            - Competitor pricing
+            - Perceived value
+            - Market positioning
+            
+            Provide analysis and end with FINAL SUGGESTION: $XX.XX"""
+            
             ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['price_range'] = ai_suggestion
             session.modified = True
@@ -121,15 +132,27 @@ def step4():
         return redirect(url_for('step3'))
     
     if request.method == 'POST':
-        costs = request.form.get('cost_of_goods')
-        if not costs:
-            prompt = f"What would be typical cost of goods sold for '{session['data']['product_description']}' priced at ${session['data']['price_range']}?"
+        cost = request.form.get('cost_of_goods')
+        if not cost:
+            prompt = f"""Based on the following business details, what would be the cost of goods per unit?
+            - Product/Service: {session['data']['product_description']}
+            - Target Market: {session['data']['target_audience']} in {session['data']['location']}
+            - Selling Price: ${session['data']['price_range']}
+            
+            Consider:
+            - Material costs
+            - Labor costs
+            - Manufacturing/production costs
+            - Industry standard margins
+            
+            Provide analysis and end with FINAL SUGGESTION: $XX.XX"""
+            
             ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['cost_of_goods'] = ai_suggestion
             session.modified = True
             return render_template('step4.html', ai_suggestion=ai_suggestion, debug_prompt=debug_prompt)
         
-        session['data']['cost_of_goods'] = float(costs)
+        session['data']['cost_of_goods'] = float(cost)
         session.modified = True
         return redirect(url_for('step5'))
     
@@ -143,7 +166,21 @@ def step5():
     if request.method == 'POST':
         overhead = request.form.get('overhead_costs')
         if not overhead:
-            prompt = f"What would be typical monthly overhead costs (rent, utilities, salaries) for a business selling '{session['data']['product_description']}' in '{session['data']['location']}'?"
+            prompt = f"""Based on the following business details, what would be typical monthly overhead costs?
+            - Product/Service: {session['data']['product_description']}
+            - Location: {session['data']['location']}
+            - Price per Unit: ${session['data']['price_range']}
+            - Cost per Unit: ${session['data']['cost_of_goods']}
+            
+            Consider:
+            - Rent/lease costs in {session['data']['location']}
+            - Utility costs
+            - Insurance
+            - Employee salaries
+            - Other fixed costs
+            
+            Provide analysis and end with FINAL SUGGESTION: $X,XXX.XX"""
+            
             ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['overhead_costs'] = ai_suggestion
             session.modified = True
@@ -151,12 +188,49 @@ def step5():
         
         session['data']['overhead_costs'] = float(overhead)
         session.modified = True
+        return redirect(url_for('step6'))
+    
+    return render_template('step5.html')
+
+@app.route('/step6', methods=['GET', 'POST'])
+def step6():
+    if 'data' not in session or not session['data'].get('overhead_costs'):
+        return redirect(url_for('step5'))
+    
+    if request.method == 'POST':
+        startup_costs = request.form.get('startup_costs')
+        if not startup_costs:
+            prompt = f"""Based on the following business details, what would be reasonable startup costs?
+            - Product/Service: {session['data']['product_description']}
+            - Target Market: {session['data']['target_audience']} in {session['data']['location']}
+            - Price per Unit: ${session['data']['price_range']}
+            - Cost per Unit: ${session['data']['cost_of_goods']}
+            - Monthly Overhead: ${session['data']['overhead_costs']}
+            
+            Consider and break down:
+            - Initial inventory needs
+            - Required equipment/facilities
+            - Legal and registration fees
+            - Initial marketing/launch costs
+            - Security deposits
+            - Working capital needs
+            
+            Provide detailed breakdown and end with FINAL SUGGESTION: $XX,XXX.XX"""
+            
+            ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
+            session['data']['ai_suggestions']['startup_costs'] = ai_suggestion
+            session.modified = True
+            return render_template('step6.html', ai_suggestion=ai_suggestion, debug_prompt=debug_prompt)
+        
+        session['data']['startup_costs'] = float(startup_costs)
+        session.modified = True
         
         # Calculate break-even point and prepare data for summary
         data = session['data']
         fixed_costs = float(data['overhead_costs'])
         variable_costs = float(data['cost_of_goods'])
         price = float(data['price_range'])
+        startup_costs = float(data['startup_costs'])
         
         try:
             if price <= variable_costs:
@@ -164,8 +238,11 @@ def step5():
                 break_even_message = "Cannot calculate break-even point: Price per unit must be greater than variable costs per unit."
                 show_chart = False
             else:
-                break_even_units = fixed_costs / (price - variable_costs)
-                break_even_message = f"You need to sell {break_even_units:.2f} units to break even."
+                # Calculate break-even including startup costs
+                contribution_margin = price - variable_costs
+                total_fixed_costs = fixed_costs + (startup_costs / 12)  # Amortize startup costs over 1 year
+                break_even_units = total_fixed_costs / contribution_margin
+                break_even_message = f"You need to sell {break_even_units:.2f} units per month to break even (including startup costs amortized over 1 year)."
                 show_chart = True
         except Exception as e:
             break_even_units = 0
@@ -176,9 +253,9 @@ def step5():
         if show_chart:
             max_units = int(break_even_units * 2)
             chart_data = {
-                'labels': [i * (max_units // 10) for i in range(11)],  # 0 to max_units in 10 steps
+                'labels': [i * (max_units // 10) for i in range(11)],
                 'revenue': [(i * (max_units // 10)) * price for i in range(11)],
-                'costs': [(i * (max_units // 10)) * variable_costs + fixed_costs for i in range(11)]
+                'costs': [(i * (max_units // 10)) * variable_costs + fixed_costs + (startup_costs / 12) for i in range(11)]
             }
         else:
             chart_data = {'labels': [], 'revenue': [], 'costs': []}
@@ -190,7 +267,7 @@ def step5():
                              show_chart=show_chart,
                              chart_data=chart_data)
     
-    return render_template('step5.html')
+    return render_template('step6.html')
 
 @app.route('/summary')
 def summary():

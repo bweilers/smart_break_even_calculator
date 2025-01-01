@@ -9,6 +9,10 @@
     <div class="alert alert-info">
         <h4>AI Suggestion:</h4>
         <p>{{ ai_suggestion }}</p>
+        <button type="button" class="btn btn-sm btn-outline-primary use-suggestion-btn" 
+                onclick='useSuggestion({{ ai_suggestion|tojson|safe }}, "price_range")'>
+            Use Suggestion
+        </button>
         <hr>
         <div class="debug-info">
             <h5>Debug - Prompt sent to AI:</h5>

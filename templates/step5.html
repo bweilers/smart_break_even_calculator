@@ -9,6 +9,10 @@
     <div class="alert alert-info">
         <h4>AI Suggestion:</h4>
         <p>{{ ai_suggestion }}</p>
+        <button type="button" class="btn btn-sm btn-outline-primary use-suggestion-btn" 
+                onclick='useSuggestion({{ ai_suggestion|tojson|safe }}, "overhead_costs")'>
+            Use Suggestion
+        </button>
     </div>
     {% endif %}
     
@@ -22,7 +26,7 @@
         
         <div class="d-flex justify-content-between">
             <a href="{{ url_for('step4') }}" class="btn btn-secondary">← Back</a>
-            <button type="submit" class="btn btn-primary">Calculate Break-Even →</button>
+            <button type="submit" class="btn btn-primary">Next →</button>
         </div>
     </form>
 </div>

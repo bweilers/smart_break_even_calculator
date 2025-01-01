@@ -54,6 +54,22 @@
                     </td>
                 </tr>
                 <tr>
+                    <th>One-time Startup Costs:</th>
+                    <td>${{ "%.2f"|format(data.startup_costs) }}
+                        {% if 'startup_costs' in data.ai_suggestions %}
+                        <span class="badge bg-info">AI Suggested</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Monthly Impact of Startup Costs:</th>
+                    <td>${{ "%.2f"|format(data.startup_costs / 12) }} (amortized over 1 year)</td>
+                </tr>
+                <tr>
+                    <th>Total Monthly Fixed Costs:</th>
+                    <td>${{ "%.2f"|format(data.overhead_costs + (data.startup_costs / 12)) }} (including amortized startup costs)</td>
+                </tr>
+                <tr>
                     <th>Contribution Margin per Unit:</th>
                     <td>${{ "%.2f"|format(data.price_range - data.cost_of_goods) }}</td>
                 </tr>
