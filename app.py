@@ -9,10 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 # Set a fixed secret key instead of a random one that changes on restart
 app.secret_key = 'your-super-secret-key-here'  # In production, use a proper secret key
-client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
-    default_headers={"x-stainless-arch": "n/a"}
-)
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Initialize session data structure
 def init_session():
