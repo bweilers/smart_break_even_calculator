@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, jsonify, redirect, url_for
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
+import openai
 
 
 load_dotenv()
@@ -9,7 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 # Set a fixed secret key instead of a random one that changes on restart
 app.secret_key = 'your-super-secret-key-here'  # In production, use a proper secret key
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Initialize session data structure
 def init_session():
@@ -33,20 +33,19 @@ def init_session():
 def get_ai_suggestion(prompt):
     try:
         print(f"Debug - Sending prompt to OpenAI: {prompt}")  # Debug print
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": """You are a business analyst helping entrepreneurs estimate costs and metrics for their business.
-                Always structure your response as follows:
-                1. Detailed explanation and analysis
-                2. Breakdown of components (if applicable)
-                3. End with 'FINAL SUGGESTION: $X,XXX.XX' on a new line, where X,XXX.XX is your final suggested amount"""},
+                {"role": "system", "content": """You are a business analyst helping entrepreneurs estimate costs and metrics for their business."""},
                 {"role": "user", "content": prompt}
             ]
         )
-        return response.choices[0].message.content, prompt  # Return both response and prompt
+        print(f"Debug - Received response from OpenAI: {response}")  # Debug print
+        return response.choices[0].message.content
     except Exception as e:
-        return f"Error getting AI suggestion: {str(e)}", prompt
+        print(f"Error in get_ai_suggestion: {str(e)}")  # Debug print
+        return f"Error: {str(e)}"
+
 
 @app.route('/')
 def index():
@@ -115,10 +114,10 @@ def step3():
             
             Provide analysis and end with FINAL SUGGESTION: $XX.XX"""
             
-            ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
+            ai_suggestion = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['price_range'] = ai_suggestion
             session.modified = True
-            return render_template('step3.html', ai_suggestion=ai_suggestion, debug_prompt=debug_prompt)
+            return render_template('step3.html', ai_suggestion=ai_suggestion)
         
         session['data']['price_range'] = float(price)
         session.modified = True
@@ -147,10 +146,10 @@ def step4():
             
             Provide analysis and end with FINAL SUGGESTION: $XX.XX"""
             
-            ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
+            ai_suggestion = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['cost_of_goods'] = ai_suggestion
             session.modified = True
-            return render_template('step4.html', ai_suggestion=ai_suggestion, debug_prompt=debug_prompt)
+            return render_template('step4.html', ai_suggestion=ai_suggestion)
         
         session['data']['cost_of_goods'] = float(cost)
         session.modified = True
@@ -181,10 +180,10 @@ def step5():
             
             Provide analysis and end with FINAL SUGGESTION: $X,XXX.XX"""
             
-            ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
+            ai_suggestion = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['overhead_costs'] = ai_suggestion
             session.modified = True
-            return render_template('step5.html', ai_suggestion=ai_suggestion, debug_prompt=debug_prompt)
+            return render_template('step5.html', ai_suggestion=ai_suggestion)
         
         session['data']['overhead_costs'] = float(overhead)
         session.modified = True
@@ -217,10 +216,10 @@ def step6():
             
             Provide detailed breakdown and end with FINAL SUGGESTION: $XX,XXX.XX"""
             
-            ai_suggestion, debug_prompt = get_ai_suggestion(prompt)
+            ai_suggestion = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['startup_costs'] = ai_suggestion
             session.modified = True
-            return render_template('step6.html', ai_suggestion=ai_suggestion, debug_prompt=debug_prompt)
+            return render_template('step6.html', ai_suggestion=ai_suggestion)
         
         session['data']['startup_costs'] = float(startup_costs)
         session.modified = True
