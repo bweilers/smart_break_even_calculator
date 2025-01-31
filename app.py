@@ -2,14 +2,34 @@ from flask import Flask, render_template, request, session, jsonify, redirect, u
 import os
 from dotenv import load_dotenv
 import openai
+from functools import wraps
 
 
 load_dotenv()
 
 app = Flask(__name__)
-# Set a fixed secret key instead of a random one that changes on restart
-app.secret_key = 'your-super-secret-key-here'  # In production, use a proper secret key
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-super-secret-key-here')
 openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Authentication decorator
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('authenticated'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
+
+# Login route
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        access_code = request.form.get('access_code')
+        if access_code == os.environ.get('SECRET_KEY'):
+            session['authenticated'] = True
+            return redirect(url_for('index'))
+        return render_template('login.html', error='Invalid access code')
+    return render_template('login.html')
 
 # Initialize session data structure
 def init_session():
@@ -29,25 +49,9 @@ def init_session():
         }
         session.modified = True
 
-
-def get_ai_suggestion(prompt):
-    try:
-        print(f"Debug - Sending prompt to OpenAI: {prompt}")  # Debug print
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": """You are a business analyst helping entrepreneurs estimate costs and metrics for their business."""},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        print(f"Debug - Received response from OpenAI: {response}")  # Debug print
-        return response.choices[0].message.content
-    except Exception as e:
-        print(f"Error in get_ai_suggestion: {str(e)}")  # Debug print
-        return f"Error: {str(e)}"
-
-
+# Apply the requires_auth decorator to all routes that need protection
 @app.route('/')
+@requires_auth
 def index():
     # Always initialize session when starting
     session.clear()
@@ -55,6 +59,7 @@ def index():
     return render_template('step1.html')
 
 @app.route('/step1', methods=['GET', 'POST'])
+@requires_auth
 def step1():
     if request.method == 'POST':
         product_description = request.form.get('product_description')
@@ -72,6 +77,7 @@ def step1():
     return render_template('step1.html')
 
 @app.route('/step2', methods=['GET', 'POST'])
+@requires_auth
 def step2():
     if 'data' not in session or not session['data'].get('product_description'):
         return redirect(url_for('step1'))
@@ -93,6 +99,7 @@ def step2():
     return render_template('step2.html')
 
 @app.route('/step3', methods=['GET', 'POST'])
+@requires_auth
 def step3():
     if 'data' not in session or not session['data'].get('target_audience'):
         return redirect(url_for('step2'))
@@ -126,6 +133,7 @@ def step3():
     return render_template('step3.html')
     
 @app.route('/step4', methods=['GET', 'POST'])
+@requires_auth
 def step4():
     if 'data' not in session or not session['data'].get('price_range'):
         return redirect(url_for('step3'))
@@ -158,6 +166,7 @@ def step4():
     return render_template('step4.html')
 
 @app.route('/step5', methods=['GET', 'POST'])
+@requires_auth
 def step5():
     if 'data' not in session or not session['data'].get('cost_of_goods'):
         return redirect(url_for('step4'))
@@ -192,6 +201,7 @@ def step5():
     return render_template('step5.html')
 
 @app.route('/step6', methods=['GET', 'POST'])
+@requires_auth
 def step6():
     if 'data' not in session or not session['data'].get('overhead_costs'):
         return redirect(url_for('step5'))
@@ -269,6 +279,7 @@ def step6():
     return render_template('step6.html')
 
 @app.route('/summary')
+@requires_auth
 def summary():
     data = session['data']
     
@@ -293,6 +304,22 @@ def summary():
                          data=data, 
                          break_even_units=break_even_units,
                          chart_data=chart_data)
+
+def get_ai_suggestion(prompt):
+    try:
+        print(f"Debug - Sending prompt to OpenAI: {prompt}")  # Debug print
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": """You are a business analyst helping entrepreneurs estimate costs and metrics for their business."""},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        print(f"Debug - Received response from OpenAI: {response}")  # Debug print
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Error in get_ai_suggestion: {str(e)}")  # Debug print
+        return f"Error: {str(e)}"
 
 if __name__ == '__main__':
     app.run(debug=True)
