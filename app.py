@@ -53,8 +53,10 @@ def init_session():
 @app.route('/')
 @requires_auth
 def index():
-    # Always initialize session when starting
+    # Preserve authentication status while clearing other session data
+    auth_status = session.get('authenticated', False)
     session.clear()
+    session['authenticated'] = auth_status
     init_session()
     return render_template('step1.html')
 
