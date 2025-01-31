@@ -8,7 +8,10 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-super-secret-key-here')
+secret_key = os.getenv('FLASK_SECRET_KEY')
+if not secret_key:
+    raise RuntimeError('FLASK_SECRET_KEY environment variable must be set')
+app.secret_key = secret_key
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Authentication decorator
