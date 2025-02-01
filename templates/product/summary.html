@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="mb-4">Break-Even Analysis Summary</h2>
+            
+            <!-- Break-even Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Break-Even Visualization</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 400px;">
+                        <canvas id="breakEvenChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Business Overview</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Product Description:</strong> {{ data.product_description }}</p>
+                    <p><strong>Target Market:</strong> {{ data.target_audience }}</p>
+                    <p><strong>Location:</strong> {{ data.location }}</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Financial Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Price per Unit:</strong> ${{ "%.2f"|format(data.price_range) }}</p>
+                            <p><strong>Cost per Unit:</strong> ${{ "%.2f"|format(data.cost_of_goods) }}</p>
+                            <p><strong>Monthly Overhead:</strong> ${{ "%.2f"|format(data.overhead_costs) }}</p>
+                            <p><strong>Marketing Budget:</strong> ${{ "%.2f"|format(data.marketing_budget) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Startup Costs:</strong> ${{ "%.2f"|format(data.startup_costs) }}</p>
+                            <p><strong>Monthly Sales Volume:</strong> {{ data.sales_volume }} units</p>
+                            <p><strong>Target Break-even:</strong> {{ data.time_horizon }} months</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Break-Even Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Monthly Revenue:</strong> ${{ "%.2f"|format(monthly_revenue) }}</p>
+                            <p><strong>Monthly Costs:</strong> ${{ "%.2f"|format(monthly_costs) }}</p>
+                            <p><strong>Monthly Profit/Loss:</strong> ${{ "%.2f"|format(monthly_profit) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Total Investment Needed:</strong> ${{ "%.2f"|format(total_investment) }}</p>
+                            <p><strong>Months to Break-even:</strong> {{ "%.1f"|format(months_to_breakeven) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="alert {{ 'alert-success' if months_to_breakeven <= data.time_horizon else 'alert-warning' }} mt-3">
+                        {% if months_to_breakeven <= data.time_horizon %}
+                            <h5>✅ You're on track!</h5>
+                            <p>You'll break even in {{ "%.1f"|format(months_to_breakeven) }} months, which is within your target of {{ data.time_horizon }} months.</p>
+                        {% else %}
+                            <h5>⚠️ Adjustment Needed</h5>
+                            <p>It will take {{ "%.1f"|format(months_to_breakeven) }} months to break even, which is longer than your target of {{ data.time_horizon }} months.</p>
+                            <p>Consider:</p>
+                            <ul>
+                                <li>Increasing your price</li>
+                                <li>Reducing costs</li>
+                                <li>Increasing sales volume</li>
+                                <li>Adjusting your target timeline</li>
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('product.index') }}" class="btn btn-primary">Start New Calculation</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js and custom chart initialization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/break-even-chart.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartData = {
+            monthsToBreakeven: {{ months_to_breakeven }},
+            startupCosts: {{ data.startup_costs }},
+            monthlyCosts: {{ monthly_costs }},
+            monthlyRevenue: {{ monthly_revenue }}
+        };
+        initBreakEvenChart(chartData);
+    });
+</script>
+{% endblock %}

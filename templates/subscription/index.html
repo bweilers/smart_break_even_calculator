@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h2 class="mb-4">Subscription-Based Business Calculator</h2>
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
+            <a href="{{ url_for('select_business_type') }}" class="btn btn-primary">
+                Back to Business Type Selection
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

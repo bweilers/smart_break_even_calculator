@@ -91,3 +91,8 @@ h2 {
     float: right;
     margin-top: -5px;
 }
+
+#time_horizon::placeholder {
+    color: #999;
+    font-style: italic;
+}

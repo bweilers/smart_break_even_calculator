@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Step 2: Target Market</h2>
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="target_audience" class="form-label">Who is your target audience?</label>
+                    <textarea class="form-control" id="target_audience" name="target_audience" rows="3" required></textarea>
+                    <div class="form-text">Describe your ideal customer (age, interests, income level, etc.)</div>
+                </div>
+                <div class="mb-3">
+                    <label for="location" class="form-label">Where will you sell your product?</label>
+                    <input type="text" class="form-control" id="location" name="location" required>
+                    <div class="form-text">Enter a city, state, or country</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Next</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

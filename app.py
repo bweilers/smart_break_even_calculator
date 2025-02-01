@@ -1,9 +1,13 @@
-from flask import Flask, render_template, request, session, jsonify, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 import os
 from dotenv import load_dotenv
 import openai
 from functools import wraps
 
+# Import blueprints
+from blueprints.product import bp as product_bp
+from blueprints.subscription import bp as subscription_bp
+from blueprints.service import bp as service_bp
 
 load_dotenv()
 
@@ -13,6 +17,11 @@ if not secret_key:
     raise RuntimeError('FLASK_SECRET_KEY environment variable must be set')
 app.secret_key = secret_key
 openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Register blueprints
+app.register_blueprint(product_bp)
+app.register_blueprint(subscription_bp)
+app.register_blueprint(service_bp)
 
 # Authentication decorator
 def requires_auth(f):
@@ -30,7 +39,7 @@ def login():
         access_code = request.form.get('access_code')
         if access_code == os.environ.get('SECRET_KEY'):
             session['authenticated'] = True
-            return redirect(url_for('index'))
+            return redirect(url_for('select_business_type'))
         return render_template('login.html', error='Invalid access code')
     return render_template('login.html')
 
@@ -52,17 +61,13 @@ def init_session():
         }
         session.modified = True
 
-# Apply the requires_auth decorator to all routes that need protection
+# Select business type route
 @app.route('/')
 @requires_auth
-def index():
-    # Preserve authentication status while clearing other session data
-    auth_status = session.get('authenticated', False)
-    session.clear()
-    session['authenticated'] = auth_status
-    init_session()
-    return render_template('step1.html')
+def select_business_type():
+    return render_template('business_type.html')
 
+# Apply the requires_auth decorator to all routes that need protection
 @app.route('/step1', methods=['GET', 'POST'])
 @requires_auth
 def step1():

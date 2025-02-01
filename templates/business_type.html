@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h2 class="mb-4">What type of business are you looking to build?</h2>
+            
+            <div class="d-grid gap-3">
+                <a href="{{ url_for('product.index') }}" class="btn btn-primary btn-lg">
+                    Product Based Business
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="btn btn-primary btn-lg">
+                    Subscription Based Business
+                </a>
+                <a href="{{ url_for('service.index') }}" class="btn btn-primary btn-lg">
+                    Service Based Business
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Step 3: Pricing</h2>
+            <form method="POST" id="priceForm">
+                <div class="mb-3">
+                    <label for="price" class="form-label">What price will you charge per unit?</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Next</button>
+                <button type="button" class="btn btn-secondary" onclick="getAISuggestion()">Get AI Suggestion</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/suggestions.js') }}"></script>
+{% endblock %}

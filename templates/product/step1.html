@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Step 1: Describe Your Product</h2>
+            <form method="POST" action="{{ url_for('product.step1') }}">
+                <div class="mb-3">
+                    <label for="product_description" class="form-label">What product do you want to sell?</label>
+                    <textarea class="form-control" id="product_description" name="product_description" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Next</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
