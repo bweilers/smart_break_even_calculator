@@ -304,3 +304,210 @@ function initPriceSensitivityChart(data) {
         }
     });
 }
+
+function initCumulativeProfitChart(data) {
+    const ctx = document.getElementById('cumulativeProfitChart').getContext('2d');
+    
+    // Calculate monthly values
+    const monthlyRevenue = data.pricePerUnit * data.targetVolume;
+    const monthlyCosts = (data.costPerUnit * data.targetVolume) + data.overheadCosts + data.marketingBudget;
+    const monthlyProfit = monthlyRevenue - monthlyCosts;
+    
+    // Generate data for 24 months
+    const months = Array.from({length: 24}, (_, i) => i);
+    const cumulativeProfit = months.map(month => {
+        // Month 0 is just the negative startup costs
+        if (month === 0) {
+            return -data.startupCosts;
+        }
+        
+        // For all other months, add the monthly profit/loss to the previous month's total
+        return -data.startupCosts + (monthlyProfit * month);
+    });
+
+    // Find break-even point (where cumulative profit crosses 0)
+    const breakEvenMonth = cumulativeProfit.findIndex(profit => profit >= 0);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months.map(m => 'Month ' + m),
+            datasets: [{
+                label: 'Cumulative Profit/Loss',
+                data: cumulativeProfit,
+                borderColor: '#20c997',
+                backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Cumulative Profit Over Time',
+                    font: { size: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            return 'Cumulative Profit/Loss: $' + value.toLocaleString();
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        breakEvenLine: {
+                            type: 'line',
+                            yMin: 0,
+                            yMax: 0,
+                            borderColor: '#666',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            label: {
+                                content: 'Break-Even Point',
+                                enabled: true,
+                                position: 'left'
+                            }
+                        },
+                        breakEvenPoint: breakEvenMonth > 0 ? {
+                            type: 'point',
+                            xValue: breakEvenMonth,
+                            yValue: 0,
+                            backgroundColor: '#666',
+                            radius: 5,
+                            label: {
+                                content: `Break-even at Month ${breakEvenMonth}`,
+                                enabled: true,
+                                position: 'top'
+                            }
+                        } : null
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (Months)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Cumulative Profit/Loss ($)'
+                    },
+                    ticks: {
+                        callback: value => '$' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initUnitEconomicsChart(data) {
+    const ctx = document.getElementById('unitEconomicsChart').getContext('2d');
+    
+    // Calculate break-even volume
+    const fixedCosts = data.overheadCosts + data.marketingBudget;
+    const contributionMargin = data.pricePerUnit - data.costPerUnit;
+    const breakEvenUnits = Math.ceil(fixedCosts / contributionMargin);
+    
+    // Generate data points for volumes from 0 to 2x target volume
+    const maxVolume = Math.max(data.targetVolume * 2, breakEvenUnits * 1.5);
+    const volumes = Array.from({length: 20}, (_, i) => Math.round(i * maxVolume / 19));
+    
+    // Calculate revenue and cost for each volume point
+    const revenueData = volumes.map(volume => data.pricePerUnit * volume);
+    const costData = volumes.map(volume => (data.costPerUnit * volume) + fixedCosts);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: volumes.map(v => v.toLocaleString() + ' units'),
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: revenueData,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    fill: true
+                },
+                {
+                    label: 'Total Cost',
+                    data: costData,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Revenue vs. Cost by Sales Volume',
+                    font: { size: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': $' + context.raw.toLocaleString();
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        breakEvenPoint: {
+                            type: 'point',
+                            xValue: volumes.findIndex(v => v >= breakEvenUnits),
+                            yValue: data.pricePerUnit * breakEvenUnits,
+                            backgroundColor: '#666',
+                            radius: 5,
+                            label: {
+                                content: `Break-even at ${breakEvenUnits.toLocaleString()} units`,
+                                enabled: true,
+                                position: 'top'
+                            }
+                        },
+                        targetVolume: {
+                            type: 'line',
+                            xMin: volumes.findIndex(v => v >= data.targetVolume),
+                            xMax: volumes.findIndex(v => v >= data.targetVolume),
+                            borderColor: '#007bff',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            label: {
+                                content: 'Target Volume',
+                                enabled: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Sales Volume'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Amount ($)'
+                    },
+                    ticks: {
+                        callback: value => '$' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+}

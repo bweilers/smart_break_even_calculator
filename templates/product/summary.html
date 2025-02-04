@@ -6,6 +6,27 @@
         <div class="col-md-10">
             <h2 class="mb-4">Break-Even Analysis Summary</h2>
             
+            <!-- Cumulative Profit Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Breakeven Projection</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div style="height: 400px;">
+                                <canvas id="cumulativeProfitChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div style="height: 400px;">
+                                <canvas id="unitEconomicsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Break-even Chart -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -188,6 +209,8 @@
         initCashRunwayChart(chartData);
         initCostStructureChart(chartData);
         initPriceSensitivityChart(chartData);
+        initCumulativeProfitChart(chartData);
+        initUnitEconomicsChart(chartData);
     });
 </script>
 {% endblock %}
