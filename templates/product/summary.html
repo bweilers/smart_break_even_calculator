@@ -86,6 +86,76 @@
                 </div>
             </div>
 
+            <!-- Additional Analysis Charts -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Break-Even Unit Volume</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="breakEvenUnitsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Profit Margin Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="profitMarginChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Cash Runway Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="cashRunwayChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Cost Structure</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="costStructureChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Price Sensitivity Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px;">
+                                <canvas id="priceSensitivityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="text-center mt-4">
                 <a href="{{ url_for('product.index') }}" class="btn btn-primary">Start New Calculation</a>
             </div>
@@ -95,16 +165,29 @@
 
 <!-- Chart.js and custom chart initialization -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 <script src="{{ url_for('static', filename='js/break-even-chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/additional-charts.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const chartData = {
-            monthsToBreakeven: {{ months_to_breakeven }},
-            startupCosts: {{ data.startup_costs }},
+            monthlyRevenue: {{ monthly_revenue }},
             monthlyCosts: {{ monthly_costs }},
-            monthlyRevenue: {{ monthly_revenue }}
+            startupCosts: {{ data.startup_costs }},
+            monthsToBreakeven: {{ months_to_breakeven }},
+            pricePerUnit: {{ data.price_range }},
+            costPerUnit: {{ data.cost_of_goods }},
+            overheadCosts: {{ data.overhead_costs }},
+            marketingBudget: {{ data.marketing_budget }},
+            targetVolume: {{ data.sales_volume }}
         };
+        
         initBreakEvenChart(chartData);
+        initBreakEvenUnitsChart(chartData);
+        initProfitMarginChart(chartData);
+        initCashRunwayChart(chartData);
+        initCostStructureChart(chartData);
+        initPriceSensitivityChart(chartData);
     });
 </script>
 {% endblock %}
