@@ -64,6 +64,18 @@
                 </div>
             </div>
             
+            <!-- Break-Even Intersection Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Break-Even Point Visualization</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 400px;">
+                        <canvas id="breakEvenIntersectionChart"></canvas>
+                    </div>
+                </div>
+            </div>            
+
             <!-- Break-even Chart -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -223,11 +235,25 @@
 
 {% block scripts %}
 <!-- Chart.js plugins and custom chart initialization -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 <script src="{{ url_for('static', filename='js/break-even-chart.js') }}"></script>
 <script src="{{ url_for('static', filename='js/additional-charts.js') }}"></script>
 <script>
+    console.log('Script initialization starting...');
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded');
+        
+        // Check if Chart.js is loaded
+        console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+        console.log('Annotation plugin loaded:', typeof window.ChartAnnotation !== 'undefined');
+        
+        // Register the annotation plugin
+        try {
+            Chart.register(window.ChartAnnotation);
+            console.log('Annotation plugin registered successfully');
+        } catch (registerError) {
+            console.error('Error registering annotation plugin:', registerError);
+        }
+        
         const chartData = {
             monthlyRevenue: {{ monthly_revenue }},
             monthlyCosts: {{ monthly_costs }},
@@ -240,14 +266,23 @@
             targetVolume: {{ data.sales_volume }}
         };
         
-        initBreakEvenChart(chartData);
-        initBreakEvenUnitsChart(chartData);
-        initProfitMarginChart(chartData);
-        initCashRunwayChart(chartData);
-        initCostStructureChart(chartData);
-        initPriceSensitivityChart(chartData);
-        initCumulativeProfitChart(chartData);
-        initUnitEconomicsChart(chartData);
+        console.log('Chart data:', chartData);
+        
+        try {
+            console.log('Initializing charts...');
+            initBreakEvenChart(chartData);
+            initBreakEvenUnitsChart(chartData);
+            initProfitMarginChart(chartData);
+            initCashRunwayChart(chartData);
+            initCostStructureChart(chartData);
+            initPriceSensitivityChart(chartData);
+            initCumulativeProfitChart(chartData);
+            initUnitEconomicsChart(chartData);
+            initBreakEvenIntersectionChart(chartData);
+            console.log('Charts initialized successfully');
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+        }
     });
 </script>
 {% endblock %}

@@ -511,3 +511,95 @@ function initUnitEconomicsChart(data) {
         }
     });
 }
+
+function initBreakEvenIntersectionChart(data) {
+    const ctx = document.getElementById('breakEvenIntersectionChart').getContext('2d');
+    
+    // Calculate break-even point
+    const monthlyFixedCosts = data.overheadCosts + data.marketingBudget;
+    const unitContributionMargin = data.pricePerUnit - data.costPerUnit;
+    const breakEvenUnits = monthlyFixedCosts / unitContributionMargin;
+    
+    // Generate data points for volumes from 0 to 150% of break-even point
+    const maxUnits = Math.ceil(breakEvenUnits * 1.5);
+    const volumePoints = Array.from({length: maxUnits + 1}, (_, i) => i);
+    
+    // Calculate revenue and cost lines
+    const revenueData = volumePoints.map(units => units * data.pricePerUnit);
+    const costData = volumePoints.map(units => monthlyFixedCosts + (units * data.costPerUnit));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: volumePoints,
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: revenueData,
+                    borderColor: '#28a745',
+                    backgroundColor: '#28a745',
+                    borderWidth: 2,
+                    fill: false
+                },
+                {
+                    label: 'Total Cost',
+                    data: costData,
+                    borderColor: '#dc3545',
+                    backgroundColor: '#dc3545',
+                    borderWidth: 2,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Revenue vs. Cost by Sales Volume',
+                    font: { size: 16 }
+                },
+                annotation: {
+                    annotations: {
+                        breakEvenLine: {
+                            type: 'line',
+                            xMin: breakEvenUnits,
+                            xMax: breakEvenUnits,
+                            borderColor: '#007bff',
+                            borderWidth: 2,
+                            label: {
+                                content: `Break-even point: ${Math.round(breakEvenUnits)} units`,
+                                enabled: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Sales Volume (units)'
+                    },
+                    grid: {
+                        display: true
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Amount ($)'
+                    },
+                    grid: {
+                        display: true
+                    },
+                    ticks: {
+                        callback: value => '$' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+}
