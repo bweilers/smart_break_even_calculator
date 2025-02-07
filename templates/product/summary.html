@@ -48,10 +48,10 @@
                     <div class="alert {{ 'alert-success' if months_to_breakeven <= data.time_horizon else 'alert-warning' }} mt-3">
                         {% if months_to_breakeven <= data.time_horizon %}
                             <h5>✅ You're on track!</h5>
-                            <p>You'll break even in {{ "%.1f"|format(months_to_breakeven) }} months, which is within your target of {{ data.time_horizon }} months.</p>
+                            <p>Based on your inputs (see Financial Details just below), You'll break even in {{ "%.1f"|format(months_to_breakeven) }} months, which is within your target of {{ data.time_horizon }} months.</p>
                         {% else %}
                             <h5>⚠️ Adjustment Needed</h5>
-                            <p>It will take {{ "%.1f"|format(months_to_breakeven) }} months to break even, which is longer than your target of {{ data.time_horizon }} months.</p>
+                            <p>Based on your inputs (see Financial Details just below), it will take {{ "%.1f"|format(months_to_breakeven) }} months to break even, which is longer than your target of {{ data.time_horizon }} months.</p>
                             <p>Consider:</p>
                             <ul>
                                 <li>Increasing your price</li>
@@ -61,48 +61,9 @@
                             </ul>
                         {% endif %}
                     </div>
-                </div>
-            </div>
-            
-            <!-- Break-Even Intersection Chart -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Break-Even Point Visualization</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 400px;">
-                        <canvas id="breakEvenIntersectionChart"></canvas>
-                    </div>
-                </div>
-            </div>            
 
-            <!-- Break-even Chart -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Break-Even Visualization</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 400px;">
-                        <canvas id="breakEvenChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Business Overview</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Product Description:</strong> {{ data.product_description }}</p>
-                    <p><strong>Target Market:</strong> {{ data.target_audience }}</p>
-                    <p><strong>Location:</strong> {{ data.location }}</p>
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Financial Details</h5>
-                </div>
-                <div class="card-body">
+                    <hr class="my-4">
+                    <h6 class="mb-3">Financial Details</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Price per Unit:</strong> ${{ "%.2f"|format(data.price_range) }}</p>
@@ -116,41 +77,48 @@
                             <p><strong>Target Break-even:</strong> {{ data.time_horizon }} months</p>
                         </div>
                     </div>
+
+                    <hr class="my-4">
+                    <h6 class="mb-3">Business Overview</h6>
+                    <p><strong>Product Description:</strong> {{ data.product_description }}</p>
+                    <p><strong>Target Market:</strong> {{ data.target_audience }}</p>
+                    <p><strong>Location:</strong> {{ data.location }}</p>
                 </div>
             </div>
-
+            
+            <!-- Break-Even Intersection Chart -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Break-Even Analysis</h5>
+                    <h5 class="mb-0">Break-Even Point Visualization</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Monthly Revenue:</strong> ${{ "%.2f"|format(monthly_revenue) }}</p>
-                            <p><strong>Monthly Costs:</strong> ${{ "%.2f"|format(monthly_costs) }}</p>
-                            <p><strong>Monthly Profit/Loss:</strong> ${{ "%.2f"|format(monthly_profit) }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Total Investment Needed:</strong> ${{ "%.2f"|format(total_investment) }}</p>
-                            <p><strong>Months to Break-even:</strong> {{ "%.1f"|format(months_to_breakeven) }}</p>
-                        </div>
+                    <div style="height: 400px;">
+                        <canvas id="breakEvenIntersectionChart"></canvas>
                     </div>
+                    <div class="mt-3">
+                        <p class="text-muted">
+                            This chart shows the intersection of your revenue (green line) and total costs (red line). 
+                            You will need to sell a minimum of <strong>{{ "%.0f"|format((data.overhead_costs + data.marketing_budget) / (data.price_range - data.cost_of_goods)) }}</strong> units every month to break even.
+                            At this point, your revenue will exactly cover your total costs (fixed costs + variable costs).
+                        </p>
+                        <p class="text-muted">
+                            <small>
+                                <strong>Note:</strong> Fixed costs include overhead ({{ "%.2f"|format(data.overhead_costs) }}) and marketing ({{ "%.2f"|format(data.marketing_budget) }}). 
+                                Variable costs are {{ "%.2f"|format(data.cost_of_goods) }} per unit.
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>            
 
-                    <div class="alert {{ 'alert-success' if months_to_breakeven <= data.time_horizon else 'alert-warning' }} mt-3">
-                        {% if months_to_breakeven <= data.time_horizon %}
-                            <h5>✅ You're on track!</h5>
-                            <p>You'll break even in {{ "%.1f"|format(months_to_breakeven) }} months, which is within your target of {{ data.time_horizon }} months.</p>
-                        {% else %}
-                            <h5>⚠️ Adjustment Needed</h5>
-                            <p>It will take {{ "%.1f"|format(months_to_breakeven) }} months to break even, which is longer than your target of {{ data.time_horizon }} months.</p>
-                            <p>Consider:</p>
-                            <ul>
-                                <li>Increasing your price</li>
-                                <li>Reducing costs</li>
-                                <li>Increasing sales volume</li>
-                                <li>Adjusting your target timeline</li>
-                            </ul>
-                        {% endif %}
+            <!-- Break-even Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Additional Charts Below</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 400px;">
+                        <canvas id="breakEvenChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -241,18 +209,6 @@
     console.log('Script initialization starting...');
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM Content Loaded');
-        
-        // Check if Chart.js is loaded
-        console.log('Chart.js loaded:', typeof Chart !== 'undefined');
-        console.log('Annotation plugin loaded:', typeof window.ChartAnnotation !== 'undefined');
-        
-        // Register the annotation plugin
-        try {
-            Chart.register(window.ChartAnnotation);
-            console.log('Annotation plugin registered successfully');
-        } catch (registerError) {
-            console.error('Error registering annotation plugin:', registerError);
-        }
         
         const chartData = {
             monthlyRevenue: {{ monthly_revenue }},
