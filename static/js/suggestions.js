@@ -29,6 +29,16 @@ function extractNumber(text) {
 }
 
 async function getAISuggestion() {
+    // Determine which step we're on based on the form ID
+    const isPriceStep = document.getElementById('priceForm') !== null;
+    const isCostStep = document.getElementById('costForm') !== null;
+    const step = isPriceStep ? 'price' : (isCostStep ? 'cost' : null);
+    
+    if (!step) {
+        console.error('Could not determine current step');
+        return;
+    }
+
     // Show the suggestion area and loading spinner
     const suggestionArea = document.getElementById('suggestionArea');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -52,7 +62,7 @@ async function getAISuggestion() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                step: 'price'
+                step: step
             })
         });
 

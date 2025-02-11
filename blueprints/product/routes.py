@@ -265,38 +265,58 @@ def get_ai_suggestion_endpoint():
         data = request.get_json()
         step = data.get('step')
         
-        if step == 'price':
+        if step in ['price', 'cost']:
             # Get data from session
             product_description = session['data'].get('product_description', '')
             target_audience = session['data'].get('target_audience', '')
             location = session['data'].get('location', '')
+            price_range = session['data'].get('price_range', 0)
             
-            prompt = f"""
-            Based on the following information, provide a market analysis and price suggestion:
-            - Product/Service: {product_description}
-            - Target Market: {target_audience} in {location}
-            
-            Please provide:
-            1. A brief market analysis considering:
-               - Target audience demographics and purchasing power
-               - Market competition and positioning
-               - Local market conditions in {location}
-               - Value proposition for the product/service
-            
-            2. A specific price recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
-            
-            Start with the analysis and end with the final suggestion.
-            """
+            if step == 'price':
+                prompt = f"""
+                Based on the following information, provide a market analysis and price suggestion:
+                - Product/Service: {product_description}
+                - Target Market: {target_audience} in {location}
+                
+                Please provide:
+                1. A brief market analysis considering:
+                   - Target audience demographics and purchasing power
+                   - Market competition and positioning
+                   - Local market conditions in {location}
+                   - Value proposition for the product/service
+                
+                2. A specific price recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+                
+                Start with the analysis and end with the final suggestion.
+                """
+            else:  # step == 'cost'
+                prompt = f"""
+                Based on the following information, provide a cost analysis and suggestion:
+                - Product/Service: {product_description}
+                - Target Market: {target_audience} in {location}
+                - Planned Selling Price: ${price_range:.2f}
+                
+                Please provide:
+                1. A brief cost analysis considering:
+                   - Manufacturing/sourcing costs
+                   - Material quality requirements
+                   - Supply chain considerations
+                   - Profit margin analysis (based on selling price of ${price_range:.2f})
+                
+                2. A specific cost recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+                
+                Start with the analysis and end with the final suggestion.
+                """
             
             def generate():
                 try:
                     response = openai.ChatCompletion.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete market analysis followed by a price suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
+                            {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete analysis followed by a specific suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
                             {"role": "user", "content": prompt}
                         ],
-                        max_tokens=500,
+                        max_tokens=1000,  # Increased from 500 to 1000
                         temperature=0.7,
                         stream=True
                     )
