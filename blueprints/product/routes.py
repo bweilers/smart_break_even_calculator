@@ -265,13 +265,14 @@ def get_ai_suggestion_endpoint():
         data = request.get_json()
         step = data.get('step')
         
-        if step in ['price', 'cost', 'overhead']:
+        if step in ['price', 'cost', 'overhead', 'startup_costs', 'marketing_budget', 'sales_volume']:
             # Get data from session
             product_description = session['data'].get('product_description', '')
             target_audience = session['data'].get('target_audience', '')
             location = session['data'].get('location', '')
             price_range = session['data'].get('price_range', 0)
             cost_per_unit = session['data'].get('cost_of_goods', 0)
+            overhead_costs = session['data'].get('overhead_costs', 0)
             
             if step == 'price':
                 prompt = f"""
@@ -308,7 +309,7 @@ def get_ai_suggestion_endpoint():
                 
                 Start with the analysis and end with the final suggestion.
                 """
-            else:  # step == 'overhead'
+            elif step == 'overhead':
                 prompt = f"""
                 Based on the following information, provide a monthly overhead cost analysis and suggestion:
                 - Product/Service: {product_description}
@@ -329,8 +330,80 @@ def get_ai_suggestion_endpoint():
                 
                 2. A specific monthly overhead cost recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
                 
-                Start with the analysis and end with the final suggestion. Break down the costs by category
-                and explain the reasoning behind each major expense.
+                Start with the analysis and end with the final suggestion.
+                """
+            elif step == 'startup_costs':
+                prompt = f"""
+                Based on the following information, provide a startup costs analysis and suggestion:
+                - Product/Service: {product_description}
+                - Target Market: {target_audience} in {location}
+                - Selling Price: ${price_range:.2f}
+                - Cost per Unit: ${cost_per_unit:.2f}
+                - Monthly Overhead: ${overhead_costs:.2f}
+                
+                Please provide:
+                1. A comprehensive startup costs analysis considering:
+                   - Equipment and machinery needs
+                   - Initial inventory requirements
+                   - Legal and licensing fees
+                   - Location setup costs
+                   - Technology and software setup
+                   - Initial marketing materials
+                   - Working capital needs
+                   - Insurance and deposits
+                   - Other one-time startup expenses
+                
+                2. A specific startup costs recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+                
+                Start with the analysis and end with the final suggestion. Break down the costs by category.
+                """
+            elif step == 'marketing_budget':
+                prompt = f"""
+                Based on the following information, provide a monthly marketing budget analysis and suggestion:
+                - Product/Service: {product_description}
+                - Target Market: {target_audience} in {location}
+                - Selling Price: ${price_range:.2f}
+                - Cost per Unit: ${cost_per_unit:.2f}
+                - Monthly Overhead: ${overhead_costs:.2f}
+                
+                Please provide:
+                1. A comprehensive marketing budget analysis considering:
+                   - Digital marketing channels (social media, PPC, SEO)
+                   - Traditional marketing methods
+                   - Content creation and management
+                   - Email marketing
+                   - Public relations
+                   - Market research
+                   - Brand development
+                   - Marketing tools and software
+                
+                2. A specific monthly marketing budget recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+                
+                Start with the analysis and end with the final suggestion. Break down the budget by marketing channel.
+                """
+            else:  # step == 'sales_volume'
+                prompt = f"""
+                Based on the following information, provide a monthly sales volume analysis and suggestion:
+                - Product/Service: {product_description}
+                - Target Market: {target_audience} in {location}
+                - Selling Price: ${price_range:.2f}
+                - Cost per Unit: ${cost_per_unit:.2f}
+                - Monthly Overhead: ${overhead_costs:.2f}
+                
+                Please provide:
+                1. A comprehensive sales volume analysis considering:
+                   - Market size and penetration rate
+                   - Competitor sales volumes
+                   - Industry benchmarks
+                   - Seasonal variations
+                   - Sales channels and capacity
+                   - Marketing reach and conversion rates
+                   - Product lifecycle stage
+                   - Customer purchase frequency
+                
+                2. A specific monthly sales volume recommendation formatted exactly as: 'FINAL SUGGESTION: X,XXX units'
+                
+                Start with the analysis and end with the final suggestion. Include realistic ramp-up expectations.
                 """
             
             def generate():
@@ -338,7 +411,7 @@ def get_ai_suggestion_endpoint():
                     response = openai.ChatCompletion.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete analysis followed by a specific suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
+                            {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete analysis followed by a specific suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' or for sales volume 'FINAL SUGGESTION: X,XXX units' on a new line."},
                             {"role": "user", "content": prompt}
                         ],
                         max_tokens=1000,

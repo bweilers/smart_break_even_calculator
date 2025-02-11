@@ -3,8 +3,8 @@ console.log('Suggestions.js loaded');
 function extractNumber(text) {
     console.log('Extracting number from:', text);
     
-    // First try to find the FINAL SUGGESTION format
-    const finalSuggestionMatch = text.match(/FINAL SUGGESTION:\s*\$\s*([\d,]+(\.\d{2})?)/i);
+    // First try to find the FINAL SUGGESTION format for both dollars and units
+    const finalSuggestionMatch = text.match(/FINAL SUGGESTION:\s*\$?\s*([\d,]+(\.\d{2})?)\s*(units)?/i);
     if (finalSuggestionMatch) {
         console.log('Found final suggestion:', finalSuggestionMatch[1]);
         return parseFloat(finalSuggestionMatch[1].replace(/,/g, ''));
@@ -15,6 +15,13 @@ function extractNumber(text) {
     if (dollarMatch) {
         console.log('Found dollar amount:', dollarMatch[1]);
         return parseFloat(dollarMatch[1].replace(/,/g, ''));
+    }
+    
+    // If that fails, try to find any number with 'units'
+    const unitsMatch = text.match(/([\d,]+)\s*units/i);
+    if (unitsMatch) {
+        console.log('Found units amount:', unitsMatch[1]);
+        return parseFloat(unitsMatch[1].replace(/,/g, ''));
     }
     
     // If that fails, try to find any number
@@ -28,27 +35,30 @@ function extractNumber(text) {
     return null;
 }
 
-async function getAISuggestion() {
-    // Determine which step we're on based on the form ID
+async function getAISuggestion(field) {
+    // Determine which step we're on based on the form ID and field
     const isPriceStep = document.getElementById('priceForm') !== null;
     const isCostStep = document.getElementById('costForm') !== null;
     const isOverheadStep = document.getElementById('overheadForm') !== null;
+    const isBusinessDetailsStep = document.getElementById('businessDetailsForm') !== null;
     
     let step = null;
     if (isPriceStep) step = 'price';
     else if (isCostStep) step = 'cost';
     else if (isOverheadStep) step = 'overhead';
+    else if (isBusinessDetailsStep && field) step = field;
     
     if (!step) {
         console.error('Could not determine current step');
         return;
     }
 
-    // Show the suggestion area and loading spinner
-    const suggestionArea = document.getElementById('suggestionArea');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const suggestionText = document.getElementById('suggestionText');
-    const useSuggestionBtn = document.getElementById('useSuggestionBtn');
+    // Get the appropriate suggestion area elements based on the step/field
+    const elementSuffix = isBusinessDetailsStep ? `_${field}` : '';
+    const suggestionArea = document.getElementById(`suggestionArea${elementSuffix}`);
+    const loadingSpinner = document.getElementById(`loadingSpinner${elementSuffix}`);
+    const suggestionText = document.getElementById(`suggestionText${elementSuffix}`);
+    const useSuggestionBtn = document.getElementById(`useSuggestionBtn${elementSuffix}`);
 
     if (!suggestionArea || !loadingSpinner || !suggestionText || !useSuggestionBtn) {
         console.error('Required elements not found');
@@ -97,8 +107,10 @@ async function getAISuggestion() {
                             fullResponse += data.content;
                             suggestionText.textContent = fullResponse;
                             
-                            // Check if we've received the final suggestion
-                            if (fullResponse.includes('FINAL SUGGESTION: $')) {
+                            // Check if we've received the final suggestion (either dollars or units)
+                            if (fullResponse.includes('FINAL SUGGESTION:') && 
+                               (fullResponse.includes('FINAL SUGGESTION: $') || 
+                                fullResponse.includes('FINAL SUGGESTION: ') && fullResponse.includes(' units'))) {
                                 loadingSpinner.style.display = 'none';
                                 useSuggestionBtn.style.display = 'block';
                             }
