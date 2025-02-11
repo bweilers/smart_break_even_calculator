@@ -265,12 +265,13 @@ def get_ai_suggestion_endpoint():
         data = request.get_json()
         step = data.get('step')
         
-        if step in ['price', 'cost']:
+        if step in ['price', 'cost', 'overhead']:
             # Get data from session
             product_description = session['data'].get('product_description', '')
             target_audience = session['data'].get('target_audience', '')
             location = session['data'].get('location', '')
             price_range = session['data'].get('price_range', 0)
+            cost_per_unit = session['data'].get('cost_of_goods', 0)
             
             if step == 'price':
                 prompt = f"""
@@ -289,7 +290,7 @@ def get_ai_suggestion_endpoint():
                 
                 Start with the analysis and end with the final suggestion.
                 """
-            else:  # step == 'cost'
+            elif step == 'cost':
                 prompt = f"""
                 Based on the following information, provide a cost analysis and suggestion:
                 - Product/Service: {product_description}
@@ -307,6 +308,30 @@ def get_ai_suggestion_endpoint():
                 
                 Start with the analysis and end with the final suggestion.
                 """
+            else:  # step == 'overhead'
+                prompt = f"""
+                Based on the following information, provide a monthly overhead cost analysis and suggestion:
+                - Product/Service: {product_description}
+                - Target Market: {target_audience} in {location}
+                - Selling Price: ${price_range:.2f}
+                - Cost per Unit: ${cost_per_unit:.2f}
+                
+                Please provide:
+                1. A comprehensive overhead analysis considering:
+                   - Rent and utilities for storage/workspace
+                   - Marketing and advertising expenses
+                   - Employee salaries and benefits
+                   - Insurance and legal costs
+                   - Equipment maintenance
+                   - Administrative expenses
+                   - Software and technology costs
+                   - Other potential overhead categories
+                
+                2. A specific monthly overhead cost recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+                
+                Start with the analysis and end with the final suggestion. Break down the costs by category
+                and explain the reasoning behind each major expense.
+                """
             
             def generate():
                 try:
@@ -316,7 +341,7 @@ def get_ai_suggestion_endpoint():
                             {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete analysis followed by a specific suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
                             {"role": "user", "content": prompt}
                         ],
-                        max_tokens=1000,  # Increased from 500 to 1000
+                        max_tokens=1000,
                         temperature=0.7,
                         stream=True
                     )
@@ -377,7 +402,7 @@ def get_ai_suggestion(prompt):
                 {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete market analysis followed by a price suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500,  # Increased from 50 to 500
+            max_tokens=500,
             temperature=0.7
         )
         suggestion = response.choices[0].message.content.strip()

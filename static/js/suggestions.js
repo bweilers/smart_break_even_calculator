@@ -32,7 +32,12 @@ async function getAISuggestion() {
     // Determine which step we're on based on the form ID
     const isPriceStep = document.getElementById('priceForm') !== null;
     const isCostStep = document.getElementById('costForm') !== null;
-    const step = isPriceStep ? 'price' : (isCostStep ? 'cost' : null);
+    const isOverheadStep = document.getElementById('overheadForm') !== null;
+    
+    let step = null;
+    if (isPriceStep) step = 'price';
+    else if (isCostStep) step = 'cost';
+    else if (isOverheadStep) step = 'overhead';
     
     if (!step) {
         console.error('Could not determine current step');
