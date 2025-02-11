@@ -46,23 +46,13 @@ async function getAISuggestion() {
     useSuggestionBtn.style.display = 'none';
 
     try {
-        // Get the current form data
-        const form = document.getElementById('priceForm');
-        const formData = new FormData(form);
-        const productDescription = sessionStorage.getItem('productDescription') || '';
-        const targetAudience = sessionStorage.getItem('targetAudience') || '';
-        const location = sessionStorage.getItem('location') || '';
-
         const response = await fetch('/product/get_ai_suggestion', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                step: 'price',
-                product_description: productDescription,
-                target_audience: targetAudience,
-                location: location
+                step: 'price'
             })
         });
 
@@ -70,17 +60,40 @@ async function getAISuggestion() {
             throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
-        
-        // Hide loading spinner and show the suggestion
-        loadingSpinner.style.display = 'none';
-        suggestionText.textContent = data.suggestion;
-        
-        // Only show the "Use Suggestion" button if we could extract a number
-        if (extractNumber(data.suggestion) !== null) {
-            useSuggestionBtn.style.display = 'block';
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = '';
+
+        while (true) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        if (data.content) {
+                            fullResponse += data.content;
+                            suggestionText.textContent = fullResponse;
+                            
+                            // Check if we've received the final suggestion
+                            if (fullResponse.includes('FINAL SUGGESTION: $')) {
+                                loadingSpinner.style.display = 'none';
+                                useSuggestionBtn.style.display = 'block';
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error parsing chunk:', e);
+                    }
+                }
+            }
         }
-        
     } catch (error) {
         console.error('Error:', error);
         loadingSpinner.style.display = 'none';

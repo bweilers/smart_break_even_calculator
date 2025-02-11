@@ -1,7 +1,8 @@
-from flask import render_template, request, session, jsonify, redirect, url_for
+from flask import render_template, request, session, jsonify, redirect, url_for, Response
 import openai
 from . import bp
 from functools import wraps
+import json
 
 def requires_auth(f):
     @wraps(f)
@@ -265,16 +266,10 @@ def get_ai_suggestion_endpoint():
         step = data.get('step')
         
         if step == 'price':
-            # Get product info from session or request data
+            # Get data from session
             product_description = session['data'].get('product_description', '')
             target_audience = session['data'].get('target_audience', '')
             location = session['data'].get('location', '')
-            
-            # Debug print
-            print(f"Debug - AI Suggestion Request - Session data: {session['data']}")
-            print(f"Debug - Product: {product_description}")
-            print(f"Debug - Target: {target_audience}")
-            print(f"Debug - Location: {location}")
             
             prompt = f"""
             Based on the following information, provide a market analysis and price suggestion:
@@ -293,11 +288,29 @@ def get_ai_suggestion_endpoint():
             Start with the analysis and end with the final suggestion.
             """
             
-            print(f"Debug - Sending prompt to OpenAI: {prompt}")
-            suggestion = get_ai_suggestion(prompt)
-            print(f"Debug - Received suggestion: {suggestion}")
+            def generate():
+                try:
+                    response = openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete market analysis followed by a price suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=500,
+                        temperature=0.7,
+                        stream=True
+                    )
+                    
+                    for chunk in response:
+                        if chunk and chunk.choices and chunk.choices[0].delta and hasattr(chunk.choices[0].delta, 'content') and chunk.choices[0].delta.content:
+                            content = chunk.choices[0].delta.content
+                            yield f"data: {json.dumps({'content': content})}\n\n"
+                            
+                except Exception as e:
+                    print(f"Error in streaming: {str(e)}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
             
-            return jsonify({'suggestion': suggestion})
+            return Response(generate(), mimetype='text/event-stream')
         
         return jsonify({'error': 'Invalid step specified'})
     except Exception as e:

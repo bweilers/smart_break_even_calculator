@@ -23,14 +23,14 @@
                     <div class="card-body">
                         <h5 class="card-title">AI Price Suggestion</h5>
                         <div id="loadingSpinner" style="display: none;">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center mb-3">
                                 <div class="spinner-border text-primary me-2" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <span>Getting AI suggestion...</span>
+                                <span>Analyzing market data...</span>
                             </div>
                         </div>
-                        <div id="suggestionText" class="mt-2"></div>
+                        <div id="suggestionText" class="mt-2 mb-3" style="white-space: pre-wrap;"></div>
                         <button type="button" class="btn btn-primary btn-sm mt-2" 
                                 onclick="useSuggestion(document.getElementById('suggestionText').textContent, 'price')" 
                                 id="useSuggestionBtn" 
