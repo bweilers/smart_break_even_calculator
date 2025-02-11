@@ -307,7 +307,7 @@ def get_ai_suggestion_endpoint():
                 
                 2. A specific cost recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
                 
-                Start with the analysis and end with the final suggestion.
+                Start with the analysis and end with the final suggestion. Make sure to include the exact format 'FINAL SUGGESTION: $X,XXX.XX' at the end.
                 """
             elif step == 'overhead':
                 prompt = f"""

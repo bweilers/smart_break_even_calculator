@@ -107,10 +107,15 @@ async function getAISuggestion(field) {
                             fullResponse += data.content;
                             suggestionText.textContent = fullResponse;
                             
-                            // Check if we've received the final suggestion (either dollars or units)
-                            if (fullResponse.includes('FINAL SUGGESTION:') && 
-                               (fullResponse.includes('FINAL SUGGESTION: $') || 
-                                fullResponse.includes('FINAL SUGGESTION: ') && fullResponse.includes(' units'))) {
+                            // Debug logging
+                            console.log('Current response:', fullResponse);
+                            
+                            // More flexible suggestion detection
+                            const hasFinalSuggestion = /FINAL\s+SUGGESTION:.*?(\$[\d,.]+|[\d,.]+\s*units)/i.test(fullResponse);
+                            console.log('Has final suggestion (new regex):', hasFinalSuggestion);
+                            
+                            if (hasFinalSuggestion) {
+                                console.log('Final suggestion detected, showing button');
                                 loadingSpinner.style.display = 'none';
                                 useSuggestionBtn.style.display = 'block';
                             }
