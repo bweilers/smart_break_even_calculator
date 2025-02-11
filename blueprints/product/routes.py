@@ -86,11 +86,20 @@ def step3():
         # Generate AI suggestion if requested
         if 'get_suggestion' in request.form:
             prompt = f"""
-            Based on the following information, suggest a reasonable price range for this product:
+            Based on the following information, provide a market analysis and price suggestion:
             - Product/Service: {session['data']['product_description']}
             - Target Market: {session['data']['target_audience']} in {session['data']['location']}
             
-            Please provide a specific price point (just the number) that would be competitive in this market.
+            Please provide:
+            1. A brief market analysis considering:
+               - Target audience demographics and purchasing power
+               - Market competition and positioning
+               - Local market conditions in {session['data']['location']}
+               - Value proposition for the product/service
+            
+            2. A specific price recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+            
+            Start with the analysis and end with the final suggestion.
             """
             ai_suggestion = get_ai_suggestion(prompt)
             session['data']['ai_suggestions']['price_range'] = ai_suggestion
@@ -248,6 +257,53 @@ def step6():
     
     return render_template('product/step6.html')
 
+@bp.route('/get_ai_suggestion', methods=['POST'])
+@requires_auth
+def get_ai_suggestion_endpoint():
+    try:
+        data = request.get_json()
+        step = data.get('step')
+        
+        if step == 'price':
+            # Get product info from session or request data
+            product_description = session['data'].get('product_description', '')
+            target_audience = session['data'].get('target_audience', '')
+            location = session['data'].get('location', '')
+            
+            # Debug print
+            print(f"Debug - AI Suggestion Request - Session data: {session['data']}")
+            print(f"Debug - Product: {product_description}")
+            print(f"Debug - Target: {target_audience}")
+            print(f"Debug - Location: {location}")
+            
+            prompt = f"""
+            Based on the following information, provide a market analysis and price suggestion:
+            - Product/Service: {product_description}
+            - Target Market: {target_audience} in {location}
+            
+            Please provide:
+            1. A brief market analysis considering:
+               - Target audience demographics and purchasing power
+               - Market competition and positioning
+               - Local market conditions in {location}
+               - Value proposition for the product/service
+            
+            2. A specific price recommendation formatted exactly as: 'FINAL SUGGESTION: $X,XXX.XX'
+            
+            Start with the analysis and end with the final suggestion.
+            """
+            
+            print(f"Debug - Sending prompt to OpenAI: {prompt}")
+            suggestion = get_ai_suggestion(prompt)
+            print(f"Debug - Received suggestion: {suggestion}")
+            
+            return jsonify({'suggestion': suggestion})
+        
+        return jsonify({'error': 'Invalid step specified'})
+    except Exception as e:
+        print(f"Error in get_ai_suggestion_endpoint: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @bp.route('/summary')
 @requires_auth
 def summary():
@@ -285,27 +341,21 @@ def get_ai_suggestion(prompt):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful business advisor. Format your response as: 'FINAL SUGGESTION: $X,XXX.XX'"},
+                {"role": "system", "content": "You are a helpful business advisor. Provide a concise but complete market analysis followed by a price suggestion. Always end your response with 'FINAL SUGGESTION: $X,XXX.XX' on a new line."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=50
+            max_tokens=500,  # Increased from 50 to 500
+            temperature=0.7
         )
         suggestion = response.choices[0].message.content.strip()
         print(f"Debug - Raw AI Response: {suggestion}")
         
-        # Try to format the response if it's not already in the correct format
-        if not suggestion.startswith("FINAL SUGGESTION:"):
-            try:
-                # Try to extract just the number
-                import re
-                number = re.search(r'\$?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)', suggestion)
-                if number:
-                    suggestion = f"FINAL SUGGESTION: ${number.group(1)}"
-                    print(f"Debug - Reformatted suggestion: {suggestion}")
-            except Exception as format_error:
-                print(f"Debug - Error formatting suggestion: {format_error}")
+        # Ensure we have both analysis and final suggestion
+        if not suggestion.endswith('XX') and 'FINAL SUGGESTION: $' not in suggestion:
+            print("Debug - Response doesn't contain proper final suggestion format")
+            return "Error: Invalid response format from AI. Please try again."
         
         return suggestion
     except Exception as e:
         print(f"Debug - Error in get_ai_suggestion: {str(e)}")
-        return "Error: Could not get AI suggestion"
+        return f"Error: Could not get AI suggestion - {str(e)}"

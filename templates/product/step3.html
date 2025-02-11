@@ -16,6 +16,30 @@
                 <button type="submit" class="btn btn-primary">Next</button>
                 <button type="button" class="btn btn-secondary" onclick="getAISuggestion()">Get AI Suggestion</button>
             </form>
+            
+            <!-- AI Suggestion Display Area -->
+            <div id="suggestionArea" class="mt-4" style="display: none;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">AI Price Suggestion</h5>
+                        <div id="loadingSpinner" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span>Getting AI suggestion...</span>
+                            </div>
+                        </div>
+                        <div id="suggestionText" class="mt-2"></div>
+                        <button type="button" class="btn btn-primary btn-sm mt-2" 
+                                onclick="useSuggestion(document.getElementById('suggestionText').textContent, 'price')" 
+                                id="useSuggestionBtn" 
+                                style="display: none;">
+                            Use this suggestion
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
